@@ -1,0 +1,93 @@
+key:
+  type: GameObject
+  sprite_name: key
+  reference: key
+dagger:
+  type: Weapon
+  sprite_name: dagger
+  reference: dagger
+  equip_slot: "main_hand"
+  melee_attack:
+    damage: 5
+    range: 1
+    your_text: "You stab the enemy with your dagger."
+    enemy_text: "The enemy stabs you with their dagger."
+sword:
+  type: Weapon
+  sprite_name: unknown
+  reference: sword
+  melee_attack:
+    damage: 10
+    range: 1
+    your_text: "You slash the enemy with your sword."
+    enemy_text: "The enemy slashes you with their sword."
+bow:
+  type: Weapon
+  sprite_name: unknown
+  reference: bow
+  equip_slot: "missile"
+  ranged_attack:
+    damage: 1
+    range: 5
+    your_text: "You shoot the enemy with your bow."
+    enemy_text: "The enemy shoots you with their bow."
+spear:
+  type: Weapon
+  sprite_name: spear
+  reference: spear
+  equip_slot: "main_hand"
+  melee_attack:
+    damage: 10
+    range: 1
+    your_text: "You stab the enemy with your spear."
+    enemy_text: "The enemy stabs you with their spear."
+player_fists:
+  type: Weapon
+  sprite_name: unknown
+  reference: fist
+  melee_attack:
+    damage: 1
+    range: 1
+    your_text: "You punch the enemy."
+    enemy_text: "The enemy punches you."
+skeleton_claws:
+  type: Weapon
+  sprite_name: unknown
+  reference: skeleton_claws
+  melee_attack:
+    damage: 1
+    range: 1
+    enemy_text: "The skeleton claws at you."
+    yours_text: "You claw at the enemy."
+tree_1:
+  type: GameObject
+  sprite_name: tree_1
+  reference: tree
+  block_movement: True
+  is_takable: False
+tree_2:
+  type: GameObject
+  sprite_name: tree_2
+  reference: tree
+  block_movement: True
+  is_takable: False
+respawn_point:
+  type: GameObject
+  sprite_name: unknown
+  reference: "Spawn Point"
+  block_movement: True
+stairs_up:
+  type: Portal
+  sprite_name: stairs_up
+  reference: "Stairs Up"
+  block_movement: False
+stairs_down:
+  type: Portal
+  sprite_name: stairs_down
+  reference: "Stairs Down"
+  block_movement: False
+barrel:
+  type: GameObject
+  sprite_name: barrel
+  reference: barrel
+  block_movement: True

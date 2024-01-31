@@ -1,0 +1,37 @@
+outdoor:
+  dirt: 
+    - [ "blank"   , 16 ]
+    - [ "ground_1", 1 ]
+    - [ "ground_1v", 1 ]
+    - [ "ground_1h", 1 ]
+    - [ "ground_2", 1 ]
+    - [ "ground_3", 1 ]
+    - [ "ground_4", 1 ]
+  stone:
+    - [ "blank",    1 ]
+  impassible:
+    - [ "mountains_1",    1 ]
+    - [ "mountains_2",    1 ]
+    - [ "mountains_3",    1 ]
+  water:
+    - [ "water_1",    1 ]
+    - [ "water_2",    1 ]
+dungeon:
+  dirt:
+    - [ "blank"   , 10 ]
+    - [ "dungeon_floor_1", 1 ]
+    - [ "dungeon_floor_1v", 1 ]
+    - [ "dungeon_floor_1h", 1 ]
+    - [ "dungeon_floor_2", 1 ]
+    - [ "dungeon_floor_2v", 1 ]
+    - [ "dungeon_floor_2h", 1 ]
+  stone:
+    - [ "hash_1"   , 1 ]
+    - [ "hash_2"   , 1 ]
+    - [ "hash_3"   , 1 ]
+    - [ "hash_4"   , 1 ]
+  impassible:
+    - [ "blank"   , 1 ]
+  water:
+    - [ "water_1",    1 ]
+    - [ "water_2",    1 ]

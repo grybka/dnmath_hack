@@ -1,0 +1,118 @@
+player:
+  file: "data/images/creature_spritesheet.png"
+  rect: [ 0, 0, 256, 256]
+skeleton:
+  file: "data/images/creature_spritesheet.png"
+  rect: [ 512, 0, 256, 256]
+goblin:
+  file: "data/images/creature_spritesheet.png"
+  rect: [ 256, 0, 256, 256]
+unknown:
+  file: "data/images/furnishing_spritesheet.png"
+  rect: [ 256, 0, 256, 256]
+barrel:
+  file: "data/images/furnishing_spritesheet.png"
+  rect: [ 256, 0, 256, 256]
+tree_2:
+  file: "data/images/furnishing_spritesheet.png"
+  rect: [ 0, 0, 256, 256]
+skullnbones:
+  file: "data/images/furnishing_spritesheet.png"
+  rect: [ 512, 0, 256, 256]
+chest:
+  file: "data/images/furnishing_spritesheet.png"
+  rect: [ 768, 0, 256, 256]
+sparkle:
+  file: "data/images/furnishing_spritesheet.png"
+  rect: [ 1024, 0, 256, 256]
+ground_1:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 768, 0, 256, 256]
+ground_1v:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 768, 0, 256, 256]
+  transforms: [ "vflip" ]
+ground_1h:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 768, 0, 256, 256]
+  transforms: [ "hflip" ]
+ground_2:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 1024, 0, 256, 256]
+ground_3:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 1280, 0, 256, 256]
+ground_4:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 1280, 0, 256, 256]
+mountains_1:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 0, 0, 256, 256]
+mountains_2:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 256, 0, 256, 256]
+mountains_3:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 512, 0, 256, 256]
+stairs_up:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 2304, 0 , 256, 256]
+stairs_down:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 0,256,256,256]
+water_1:
+  file: "data/images/water_1.png"
+water_2:
+  file: "data/images/water_2.png"
+dungeon_floor_1:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 1792,256,256,256]
+dungeon_floor_1v:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 1792,256,256,256]
+  transforms: [ "vflip" ]
+dungeon_floor_1h:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 1792,256,256,256]
+  transforms: [ "hflip" ]
+dungeon_floor_2:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 2048,256,256,256]
+dungeon_floor_2v:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 2048,256,256,256]
+  transforms: [ "vflip" ]
+dungeon_floor_2h:
+  file: "data/images/tile_spritesheet.png"
+  rect: [ 2048,256,256,256]
+  transforms: [ "hflip" ]
+hash_1:
+  file: "data/images/hashing.png"
+  rect: [ 0, 0, 64, 64 ]
+hash_2:
+  file: "data/images/hashing.png"
+  rect: [ 64, 0, 64, 64 ]
+hash_3:
+  file: "data/images/hashing.png"
+  rect: [ 0, 64, 64, 64 ]
+hash_4:
+  file: "data/images/hashing.png"
+  rect: [ 64, 64, 64, 64 ]
+dagger:
+  file: "data/images/item_spritesheet.png"
+  rect: [ 0, 0, 256, 256]
+spear:
+  file: "data/images/item_spritesheet.png"
+  rect: [ 256, 0, 256, 256]
+arrow:
+  file: "data/images/item_spritesheet.png"
+  rect: [ 512, 0, 256, 256]
+sword:
+  file: "data/images/item_spritesheet.png"
+  rect: [ 768, 0, 256, 256]
+bow:
+  file: "data/images/item_spritesheet.png"
+  rect: [ 1024, 0, 256, 256]
+helmet:
+  file: "data/images/item_spritesheet.png"
+  rect: [ 1280, 0, 256, 256]
