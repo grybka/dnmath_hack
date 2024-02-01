@@ -2,8 +2,9 @@ import random
 from ..level.LevelData import LevelData
 from ..level.MapCoord import MapCoord
 from ..level.ObjectStore import ObjectStore
-from ..level.GraphPaperMap import GraphPaperMap, CellType
+from ..level.GraphPaperMap import GraphPaperMap, CellType, MapMask
 from ..level.ObjectFactory import create_object_from_template
+from ..behavior.BasicBehaviors import *
 
 class OutdoorLevelGenerator:
     def __init__(self):
@@ -46,6 +47,8 @@ class OutdoorLevelGenerator:
         enemies_to_add=["imp","skeleton","skeleton"]
         for enemy in enemies_to_add:
             obj=create_object_from_template(enemy)
+            obj.behavior=BTChasePlayer()
+            #obj.behavior=BTRandomWalk()
             x=random.randint(1,map.width-2)
             y=random.randint(1,map.height-2)
             level.add_object_to_cell(obj,MapCoord(x,y))
@@ -57,6 +60,11 @@ class OutdoorLevelGenerator:
         for i in range(map.height):
             map.set_cell_type(MapCoord(0,i),CellType.IMPASSIBLE)
             map.set_cell_type(MapCoord(map.width-1,i),CellType.IMPASSIBLE)
+
+        #lighting
+        map.set_ambient_light(255)
+        map.recalculate_lighting()
+        level.memory_mask=MapMask(map.width,map.height)
 
 
         level.player_respawn_point=MapCoord(center_x,center_y)

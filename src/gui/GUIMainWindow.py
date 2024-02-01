@@ -71,6 +71,8 @@ class GUIMainWindow(GUIElement):
                 self.move_in_direction(Direction.W)
             elif event.key == pygame.K_RIGHT:
                 self.move_in_direction(Direction.E)
+            elif event.key == pygame.K_PERIOD:
+                self.engine.set_player_action(WaitAction(self.engine.get_player(),self.engine))
 #        if event.type == GUIEvents.CELL_SELECTED_EVENT:
 #            print("cell selected {}".format(event.cell))
         for window in self.popup_windows:
@@ -133,6 +135,11 @@ class GUIMainWindow(GUIElement):
             self.text_window.print(message.reason)
         if message.message_type=="MeleeAttack":
             self.text_window.print(message.message)
+            attacker=self.engine.level.object_store.get_object(message.attacker)
+            defender=self.engine.level.object_store.get_object(message.defender)
+            anim=MapAnimationFlash(self.mapview,self.engine,defender.get_pos(),(255,0,0))
+            activity=GUIWaitForMapAnimation(self,self.engine,self.mapview.add_animation(anim))
+            self.add_activity(activity)
         if message.message_type=="RangedAttack":
             self.text_window.print(message.message)
             anim=MapAnimationMissile(self.mapview,self.engine,"arrow",message.start_pos,message.end_pos,500)

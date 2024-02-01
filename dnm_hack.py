@@ -12,8 +12,8 @@ load_object_templates("data/objects/object_templates.yaml")
 load_object_templates("data/objects/entity_templates.yaml")
 
 
-#level=OutdoorLevelGenerator().generate(20,20,"test")
-level=DungeonLevelGenerator().generate(30,30,"test")
+level=OutdoorLevelGenerator().generate(20,20,"test")
+#level=DungeonLevelGenerator().generate(20,20,"test")
 
 engine=GameEngine()
 engine.add_level(level)

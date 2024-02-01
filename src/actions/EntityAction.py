@@ -23,6 +23,19 @@ class EntityAction:
             self.execute()
         else:
             self.engine.add_message(EMActionFailed(message))
+            if self.actor is not None: #by default, failing means you lose your turn
+                self.engine.level.add_to_entity_initiative(self.actor.id,1.0)
+
+class WaitAction(EntityAction):
+    def __init__(self,actor:Entity,engine:GameEngine):
+        super().__init__("wait",actor,engine)
+
+    def is_possible(self):
+        return True, "Can wait"
+    
+    def execute(self):
+        self.engine.add_message(EMInfoText("You wait"))
+        self.engine.level.add_to_entity_initiative(self.actor.id,1.0)
 
 class MoveAction(EntityAction):
     def __init__(self,actor:Entity,engine:GameEngine,direction:Direction):
@@ -30,6 +43,7 @@ class MoveAction(EntityAction):
         self.direction=direction
 
     def execute(self):
+        self.engine.level.add_to_entity_initiative(self.actor.id,1.0)
         level=self.actor.get_level()
         old_pos=self.actor.get_pos()
         new_pos=self.actor.get_pos()+MapCoord.direction_to_vector(self.direction)
@@ -47,6 +61,8 @@ class MoveAction(EntityAction):
         for object in level.map.get_objects_in_cell(new_pos):
             if object.block_movement:
                 return False, "There is something in your way"
+            else:
+                print("There is a {} not in the way".format(object.reference_noun(specific=False)))
         return True, "You may move"
     
 class TakeAction(EntityAction):
@@ -162,6 +178,8 @@ class MeleeAction(EntityAction):
     def is_possible(self):
         if self.target is None:
             return False, "No target to attack"
+        if self.target.get_pos() is None:
+            return False, "Target has no location"
         if self.actor.get_pos().manhattan_distance(self.target.get_pos())>1:
             return False, "Target is too far away."
         if not isinstance(self.target,Entity):
@@ -180,6 +198,7 @@ class MeleeAction(EntityAction):
         #TODO if target is dead, remove from maps
         #send out messages
         self.engine.add_message(EMMeleeAttack(self.actor.id,self.target.id,damage,text))
+        self.engine.level.add_to_entity_initiative(self.actor.id,1.0)
         if self.target.hp<=0:
             self.engine.add_message(EMCreatureDeath(self.target,self.target.get_pos()))
             self.target.dead=True
@@ -202,6 +221,8 @@ class RangedAttackAction(EntityAction):
             return False, "Your missile weapon cannot be used for ranged attacks"
         #TODO ammo
         range=weapon.ranged_info["range"]
+        if self.target.get_pos() is None:    
+            return False, "Target has no location"
         if self.actor.get_pos().manhattan_distance(self.target.get_pos())>range:
             return False, "Target is too far away."
         if not isinstance(self.target,Entity):
@@ -219,6 +240,7 @@ class RangedAttackAction(EntityAction):
         self.target.hp-=damage
         #TODO if target is dead, remove from maps
         #send out messages
+        self.engine.level.add_to_entity_initiative(self.actor.id,1.0)
         self.engine.add_message(EMRangedAttack(self.actor.id,self.target.id,damage,text,"arrow",self.actor.get_pos(),self.target.get_pos()))
         if self.target.hp<=0:
             self.engine.add_message(EMCreatureDeath(self.target,self.target.get_pos()))

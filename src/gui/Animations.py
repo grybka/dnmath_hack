@@ -144,3 +144,46 @@ class MapAnimationMissile(MapAnimation):
 
         #TODO Rotate sprite to face direction of travel
         surf.blit(rotated,(x*ppg-map_offset[0],y*ppg-map_offset[1]))
+
+class MapAnimationFlash(MapAnimation):
+    def __init__(self,mapview,engine,cell_pos,color,fade_in_duration=50,duration=10,fade_out_duration=50):
+        super().__init__(mapview,engine)
+        self.cell=cell_pos
+        self.color=color
+        self.duration=duration
+        self.fade_in_duration=fade_in_duration
+        self.fade_out_duration=fade_out_duration
+        self.duration=duration
+        self.durations=[fade_in_duration,duration,fade_out_duration]
+        self.on_time=0
+        self.done=False
+
+    def start(self):
+        self.on_time=0
+    
+    def is_done(self):
+        return self.done
+    
+    def update(self,clock_time):
+        self.on_time+=clock_time
+        #print("animation time",self.on_time,self.duration)
+        if self.on_time>sum(self.durations):
+            #self.mapview.object_layer.unhide_object(self.object_id)
+            self.done=True
+
+    def draw(self,surf,map_offset):
+        ppg=self.mapview.pixels_per_grid
+        if self.on_time<self.durations[0]:
+            alpha=self.on_time/self.durations[0]
+        elif self.on_time<self.durations[0]+self.durations[1]:
+            alpha=1.0
+        else:
+            alpha=max(1.0-(self.on_time-self.durations[0]-self.durations[1])/self.durations[2],0)
+        alphaint=int(255*alpha)
+        colora=(self.color[0],self.color[1],self.color[2],alphaint)
+        #surf.fill(colora,(self.cell[0]*ppg-map_offset[0],self.cell[1]*ppg-map_offset[1],ppg,ppg),pygame.BLEND_SUB)
+        #surf.fill(colora,(self.cell[0]*ppg-map_offset[0],self.cell[1]*ppg-map_offset[1],ppg,ppg),pygame.BLEND_MAX)
+        surf.fill(colora,(self.cell[0]*ppg-map_offset[0],self.cell[1]*ppg-map_offset[1],ppg,ppg))
+
+        #surf.fill((0,alphaint,alphaint),(self.cell[0]*ppg-map_offset[0],self.cell[1]*ppg-self.cell[1],ppg,ppg),pygame.BLEND_SUB)
+        #surf.fill((alphaint,0,0),(self.cell[0]*ppg-map_offset[0],self.cell[1]*ppg-self.cell[1],ppg,ppg),pygame.BLEND_MAX)

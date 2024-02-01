@@ -7,13 +7,14 @@ from ..level.ObjectFactory import create_object_from_template
 from ..level.MapRoom import MapRoom
 from .AStarAlgorithm import DigPathThroughStone
 from .Network import Network
+from ..behavior.BasicBehaviors import *
 
 class DungeonLevelGenerator:
     def __init__(self):
         ...
 
     def generate(self,xsize,ysize,name):
-        print("Generating outdoor level")
+        print("Generating dungeon level")
         level=LevelData()
         level.map=GraphPaperMap(xsize,ysize)
         level.level_name=name
@@ -58,8 +59,18 @@ class DungeonLevelGenerator:
         #put walls up where relevant
         level.map.make_walls_on_boundaries(CellType.STONE,CellType.DIRT)
 
-        center_x=(rooms[0].rect[0]+rooms[0].rect[2])//2
-        center_y=(rooms[0].rect[1]+rooms[0].rect[3])//2
+        center_x=rooms[0].rect[0]+rooms[0].rect[2]//2
+        center_y=rooms[0].rect[1]+rooms[0].rect[3]//2
+
+        #add some monsters
+        centerx2=rooms[1].rect[0]+rooms[1].rect[2]//2
+        centery2=rooms[1].rect[1]+rooms[1].rect[3]//2
+        monster=create_object_from_template("imp")
+        #monster.behavior=BTRandomWalk()
+        monster.behavior=BTChasePlayer()
+
+
+        level.add_object_to_cell(monster,MapCoord(centerx2,centery2))
 
         level.player_respawn_point=MapCoord(center_x,center_y)
         level.tileset_name="dungeon"

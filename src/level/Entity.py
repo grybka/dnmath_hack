@@ -10,17 +10,24 @@ class Entity(GameObject):
         self.initiative=0
         self.max_hp=object.get("max_hp",4)
         self.hp=object.get("hp",self.max_hp)
-        self.block_movement=object.get("block_movement",True)
         self.inventory=[] #these are object ids
+        self.block_movement=object.get("block_movement",True)
         self.behavior=None
         self.equip_slots=["head","main_hand","off_hand","body","missile"]
         self.equipment={} #these are item ids
         for slot in self.equip_slots:
             self.equipment[slot]=None
         self.default_weapon_type=object.get("default_weapon",None)
-        self.is_takable=False
+        #vision
+        self.vision=object.get("vision",5) #in squares, illuminated >128
+        self.dark_vision=object.get("dark_vision",5) #in squares, illuminated <128
+
+        #mobility
         passable_cell_string=object.get("passable_cells",["dirt"])
         self.passable_cells=[string_to_celltype(x) for x in passable_cell_string]
+        #overrides
+        self.is_takable=False
+
 
     def get_melee_weapon(self):
         if self.equipment["main_hand"] is not None:
@@ -64,5 +71,18 @@ class Entity(GameObject):
     def unequip_slot(self,slot):
         self.equipment[slot]=None
         return True
+    
+    def get_visible_cells(self,map,include_nearby=False): #returns a list of visible cells
+        possibly_visible,nearby=map.get_visible_cells(self.get_pos(),self.vision)
+        visible=[]
+        for cell in possibly_visible:
+            if map.get_cell(cell).light_level>128:
+                visible.append(cell)
+            elif self.get_pos().manhattan_distance(cell)<self.dark_vision:
+                visible.append(cell)
+        #TODO adjust nearby to remove cells that are not visible
+        if include_nearby:
+            return visible,nearby
+        return visible
         
 register_gameobject_constructor("Entity",Entity)

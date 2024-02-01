@@ -16,3 +16,6 @@ class ObjectStore:
 
     def delete_object(self,obj_id:uuid.UUID):
         del self.objects[obj_id]
+
+    def get_object_ids_of_class(self,classname):
+        return [obj.id for obj in self.objects.values() if isinstance(obj,classname)]

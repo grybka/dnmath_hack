@@ -135,7 +135,7 @@ class MVObjectLayer(MVLayer):
 class MVVisibilityLayer(MVLayer):
     def __init__(self,engine,mapview):
         super().__init__(engine,mapview)
-        self.visibility=MapMask(self.engine.level.map.width,self.engine.level.map.height)
+#        self.visibility=MapMask(self.engine.level.map.width,self.engine.level.map.height)
         self.rendered_surf=None
         self.needs_rerender=True
 
@@ -148,13 +148,16 @@ class MVVisibilityLayer(MVLayer):
 
         
     def render(self):
-        print("rendering visibility")
+        #print("rendering visibility")
         pixels_per_grid=self.mapview.pixels_per_grid
         if self.rendered_surf==None:
             self.rendered_surf=pygame.Surface((self.engine.level.map.width*pixels_per_grid,self.engine.level.map.height*pixels_per_grid),pygame.SRCALPHA)
-        visibility=self.visibility
-        visibility.visible_to_remembered()
-        self.engine.level.map.update_map_mask(visibility,self.engine.get_player().get_pos(),distance=2)
+        visibility=self.engine.level.memory_mask
+        #this is probably not the best place to do it, but
+        #I have to recalculate the player's visibility sometime
+#        visibility=self.visibility
+#        visibility.visible_to_remembered()
+        self.engine.level.map.update_map_mask(visibility,self.engine.get_player().get_pos(),distance=5)
         for x in range(self.engine.level.map.width):
             for y in range(self.engine.level.map.height):
                 if visibility.cells[x][y]==CellVisibility.VISIBLE:

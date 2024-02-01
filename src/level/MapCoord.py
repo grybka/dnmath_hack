@@ -48,6 +48,9 @@ class MapCoord:
     def rotated_180(self):
         return MapCoord(-self.x,-self.y)
     @staticmethod
+    def all_directions():
+        return [Direction.N,Direction.E,Direction.S,Direction.W]
+    @staticmethod
     def direction_to_vector(direction):
         if direction==Direction.N:
             return MapCoord(0,-1)

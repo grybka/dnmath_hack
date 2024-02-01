@@ -70,6 +70,7 @@ class GPCell:
         self.objects=[] #what objects are in the cell
         self.random_number=random.randint(0,2047)
         self.walls=[GPWall(WallType.NONE) for i in range(4)] #N,E,S,W
+        self.light_level=0 # 0-255
         
     def __str__(self):
         return "GPCell("+str(self.cell_type)+")"
@@ -115,7 +116,7 @@ class GraphPaperMap:
             for y in range(height):
                 row.append(GPCell(CellType.DIRT))
             self.cells.append(row)
-
+        self.ambient_light=255 #the default light level without a light source
         print("intersect test {}".format(intersect(MapCoord(3.5,3.5),MapCoord(3.5,2.5),MapCoord(3,4),MapCoord(4,4))))
 
     def add_object_to_cell(self,object,coord:MapCoord):
@@ -193,7 +194,7 @@ class GraphPaperMap:
             print("other cell {}".format(self.cells[other_cell.x][other_cell.y]))
             print("other cell walls {}".format(self.cells[other_cell.x][other_cell.y].walls))
     
-    def get_objects_in_cell(self,coord):
+    def get_objects_in_cell(self,coord:MapCoord):
         return self.cells[coord.x][coord.y].objects
     
     def get_objects_within_radius(self,pos,radius):
@@ -270,7 +271,8 @@ class GraphPaperMap:
             for direction in range(4):
                 new_cell=cell+MapCoord.direction_to_vector(Direction(direction))
                 if self.is_on_map(new_cell) and self.is_cell_visible(coord,new_cell) and MapCoord(coord).manhattan_distance(MapCoord(new_cell)) < distance: 
-                    visible_cells.append(new_cell)
+                    if new_cell not in visible_cells:
+                        visible_cells.append(new_cell)
                     if new_cell not in closed_cells and new_cell not in open_cells:
                         open_cells.append(new_cell)
                     else:
@@ -279,12 +281,30 @@ class GraphPaperMap:
                     closed_cells.append(new_cell)
         nearby_cells=[ x for x in closed_cells if x not in visible_cells]
         return visible_cells,nearby_cells
+    
+    def get_objects_in_cells(self,coord_list):
+        items=[]
+        #print("getting objects in cells: "+str(coord_list))
+        for coord in coord_list:
+            items+=self.get_objects_in_cell(coord)
+        return items
                     
     def update_map_mask(self,map_mask,coord,distance=10):
         #update the map mask with the visible cells from the given cell
-        print("updating visiilib from cell: "+str(coord))
+        #print("updating visiilib from cell: "+str(coord))
         visible_cells,nearby_cells=self.get_visible_cells(coord,distance)
         for cell in visible_cells:
             map_mask.set_visible(cell.x,cell.y)
         for cell in nearby_cells:
             map_mask.set_remembered(cell.x,cell.y)
+
+    #lighting
+    def set_ambient_light(self,level=255):
+        self.set_ambient_light=255
+
+    def recalculate_lighting(self,rect=None):
+        if rect is None:
+            rect=[0,0,self.width,self.height]
+        for x in range(rect[0],rect[0]+rect[2]):
+            for y in range(rect[1],rect[1]+rect[3]):
+                self.cells[x][y].light_level=self.ambient_light

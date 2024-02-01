@@ -4,9 +4,18 @@ player:
 skeleton:
   file: "data/images/creature_spritesheet.png"
   rect: [ 512, 0, 256, 256]
-goblin:
+imp:
   file: "data/images/creature_spritesheet.png"
   rect: [ 256, 0, 256, 256]
+bad_tree:
+  file: "data/images/creature_spritesheet.png"
+  rect: [ 768, 0, 256, 256]
+goblin:
+  file: "data/images/creature_spritesheet.png"
+  rect: [ 1024, 0, 256, 256]
+dementoid:
+  file: "data/images/creature_spritesheet.png"
+  rect: [ 1280, 0, 256, 256]
 unknown:
   file: "data/images/furnishing_spritesheet.png"
   rect: [ 256, 0, 256, 256]
@@ -25,6 +34,9 @@ chest:
 sparkle:
   file: "data/images/furnishing_spritesheet.png"
   rect: [ 1024, 0, 256, 256]
+torch_stand:
+  file: "data/images/furnishing_spritesheet.png"
+  rect: [ 1280, 0, 256, 256]
 ground_1:
   file: "data/images/tile_spritesheet.png"
   rect: [ 768, 0, 256, 256]
