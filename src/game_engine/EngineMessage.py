@@ -51,3 +51,32 @@ class EMCreatureDeath(EngineMessage):
         self.message_type="CreatureDeath"
         self.creature=creature
         self.cell_pos=cell_pos
+
+class EMRoomChanged(EngineMessage):
+    def __init__(self,actor,old_room,new_room,message=""):
+        self.message_type="RoomChanged"
+        self.old_room=old_room
+        self.new_room=new_room
+        self.actor=actor
+        self.message=message
+
+class EMLevelChanged(EngineMessage):
+    def __init__(self,level,level_name):
+        self.message_type="LevelChanged"
+        self.level_name=level_name
+        self.level=level
+
+#this is for a message on something that's read
+class EMReadMessage(EngineMessage):
+    def __init__(self,reader,target,text,prompted=False):
+        self.message_type="ReadMessage"
+        self.reader=reader
+        self.target=target #a creature or None
+        self.text=text
+        self.prompted=prompted
+
+class EMDoorChangedMessage(EngineMessage):
+    def __init__(self,door,open):
+        self.message_type="DoorChanged"
+        self.door=door
+        self.open=open

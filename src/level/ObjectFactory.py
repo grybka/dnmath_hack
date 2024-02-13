@@ -38,6 +38,13 @@ class GameObjectTemplate:
             if key in self.parent:
                 return self.parent[key]
         return default
+    
+    def __str__(self):
+        ret="GameObjectTemplate: \n"
+        ret+=str(self.object)+"\n"
+        ret+="Parent: \n"
+        ret+=str(self.parent)
+        return ret
 
 class GameObjectFactory:
     def __init__(self):
@@ -53,7 +60,12 @@ class GameObjectFactory:
         if template_name in self.templates:
             temp_template=GameObjectTemplate(object,self.templates[template_name])
             ret=create_gameobject(temp_template)
-            ret.populate_subobjects()
+            #special cases things in things need to be instantiated
+            if "contents" in temp_template:
+                for content in temp_template["contents"]:
+                    obj_data=content.get("object_data",{})
+                    ret.add_object(self.create_object(content["type"],obj_data))
+#            ret.populate_subobjects()
             ret.template_type=template_name
             return ret
         else:

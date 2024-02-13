@@ -52,7 +52,7 @@ class GUIButton(GUIElement):
             else:
                 return False
         elif event.type == pygame.MOUSEBUTTONUP:
-            self.mouse_released()
+            self.mouse_released(event.button)
             return False #doesn't consume the event
         #let's have buttons not have active elements
         #if self.element:
@@ -85,17 +85,17 @@ class GUIButton(GUIElement):
             self.a_redraw_is_needed()
            
 
-    def mouse_released(self):
+    def mouse_released(self,mouse_button):
         if self.state==GUIButtonState.DISABLED:
             return
         if self.state==GUIButtonState.CLICKED:
             self.state=GUIButtonState.HOVERED
             self.a_redraw_is_needed()
-            self.register_click()
+            self.register_click(mouse_button)
 
-    def register_click(self):
+    def register_click(self,mouse_button):
         if self.on_click: #user supplied function
-            self.on_click()
+            self.on_click(mouse_button)
         print("Button clicked")
         ...
 
@@ -192,13 +192,13 @@ class GUITextButtonRow(GUIRowLayout):
 
     def add_button(self,text):
         #self.buttons.append(GUIButton(GUILabel(text),self.button_rect,on_click=lambda : self.on_click(text)))
-        self.add_element(GUIButton(GUILabel(text,style_name=self.style_name),self.button_rect,on_click=lambda : self.on_click(text),style_name=self.style_name),1)
+        self.add_element(GUIButton(GUILabel(text,style_name=self.style_name),self.button_rect,on_click=lambda b: self.on_click(b,text),style_name=self.style_name),1)
 
 
-    def on_click(self,text):
+    def on_click(self,mouse_button,text):
         #print("Button clicked: "+text)
         if self.my_on_click:
-            self.my_on_click(text)
+            self.my_on_click(mouse_button,text)
         ...
 
 class GUITextButtonCol(GUIColLayout):
@@ -215,12 +215,12 @@ class GUITextButtonCol(GUIColLayout):
     def add_button(self,text):
         #print("adding button with rect {}".format(self.button_rect))
         #self.buttons.append(GUIButton(GUILabel(text),self.button_rect,on_click=lambda : self.on_click(text)))
-        self.add_element(GUIButton(GUILabel(text,style_name=self.style_name),self.button_rect,on_click=lambda : self.on_click(text),style_name=self.style_name),1)
+        self.add_element(GUIButton(GUILabel(text,style_name=self.style_name),self.button_rect,on_click=lambda b : self.on_click(b,text),style_name=self.style_name),1)
 
-    def on_click(self,text):
+    def on_click(self,mouse_button,text):
         #print("Button clicked: "+text)
         if self.my_on_click:
-            self.my_on_click(text)
+            self.my_on_click(mouse_button,text)
         ...
 
 

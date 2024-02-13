@@ -72,7 +72,7 @@ class DigPathThroughStone(AStarAlgorithm):
         self.avoid_thin_walls=avoid_thin_walls
 
     def cell_weight(self, cell):
-        if self.the_map.get_cell_type(cell)==CellType.DIRT:
+        if self.the_map.get_cell_type(cell) in [CellType.INDOOR_FLOOR,CellType.INDOOR_CLEAN_FLOOR]:
             return 1
         elif self.the_map.get_cell_type(cell)==CellType.STONE:
             return 3

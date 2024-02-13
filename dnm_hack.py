@@ -5,19 +5,27 @@ from src.level_generation.OutdoorLevelGenerator import OutdoorLevelGenerator
 from src.level_generation.DungeonLevelGenerator import DungeonLevelGenerator
 from src.level.ObjectFactory import load_object_templates
 from src.game_engine.GameEngine import GameEngine
+from src.level_generation.GameWorldLoader import GameWorldLoader
 
 #Set up the game
 
+load_object_templates("data/objects/weapons.yaml")
 load_object_templates("data/objects/object_templates.yaml")
 load_object_templates("data/objects/entity_templates.yaml")
 
+world_loader=GameWorldLoader()
+world_loader.load_gameworld_file("data/levels/gameworld.yaml")
 
-level=OutdoorLevelGenerator().generate(20,20,"test")
-#level=DungeonLevelGenerator().generate(20,20,"test")
+#level_gen=OutdoorLevelGenerator(20,20,"test")
+#level=level_gen.generate()
+#level2=DungeonLevelGenerator().generate(20,20,"dungeon_test")
 
-engine=GameEngine()
-engine.add_level(level)
-engine.spawn_player()
+
+
+engine=GameEngine(world_loader)
+#engine.add_level(level)
+#engine.add_level(level2)
+#engine.spawn_player()
 
 
 #Set up the GUI

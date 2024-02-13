@@ -9,7 +9,7 @@ from ..actions.EntityAction import *
 class GMMMenu(GUIColLayout):
     def __init__(self,label_text,rect):
         self.label=GUILabel(label_text,my_style={"label_text_color":(255,255,255),"label_text_size":20})
-        button_rect=[0,0,100,50]
+        button_rect=[0,0,120,50]
         self.menu=GUITextButtonRow(rect,button_rect,[],my_on_click=self.button_clicked,style_name="default_button")
         super().__init__([self.label,self.menu],rect,anchors=(GUIHAnchor.LEFT,GUIVAnchor.TOP))
         for i in range(len(self.elements)):
@@ -61,12 +61,11 @@ class GUIMainMenu(GUIColLayout):
 
     def handle_event(self,event,window_offset=(0,0)):
         if event.type == GUIEvents.CELL_SELECTED_EVENT:
-            print("cell selected {}".format(event.cell))
-            text=""
-            for wall in self.engine.level.map.get_cell(event.cell).walls:
-                text+="{} ".format(wall)
-            print(text)
-            self.cell_selected_menu(event.cell)
+            if event.cell is None:
+                ...
+            else:
+                ...
+                #self.cell_selected_menu(event.cell)
 
         return super().handle_event(event,window_offset=window_offset)
 

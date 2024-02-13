@@ -2,6 +2,7 @@ import pygame
 from .GUIElement import GUIElement,GUIHAnchor,GUIVAnchor
 from .GUIPane import GUIPane
 from collections import deque
+import textwrap
 
 #This is a single line of text
 class GUILabel(GUIElement):
@@ -53,7 +54,9 @@ class GUITextBox(GUIElement):
         self.v_anchor=anchors[1]
         self.font = pygame.font.SysFont("Courier", 24)
         self.max_lines=20
+        self.text_wrap=True
         self.text_lines=deque([],self.max_lines)
+        self.calculate_width_in_characters()
         
     def update_style(self,style):
         super().update_style(style)
@@ -66,11 +69,13 @@ class GUITextBox(GUIElement):
         line_surfs=[]
         total_height=0
         max_width=0
-        for line in self.text_lines:
-            line_surfs.append(self.font.render(line, True, (255,255,255)))
-            total_height+=line_surfs[-1].get_height()
-            if line_surfs[-1].get_width()>max_width:
-                max_width=line_surfs[-1].get_width()
+        for xline in self.text_lines:
+            sublines=textwrap.wrap(xline,self.width_in_characters)
+            for line in sublines:
+                line_surfs.append(self.font.render(line, True, (255,255,255)))
+                total_height+=line_surfs[-1].get_height()
+                if line_surfs[-1].get_width()>max_width:
+                    max_width=line_surfs[-1].get_width()
         x0=0
         y0=0
         if self.h_anchor==GUIHAnchor.CENTER:
@@ -125,3 +130,16 @@ class GUITextBox(GUIElement):
         for line in text.split("\n"):
             self.text_lines.append(line)
         self.a_redraw_is_needed()
+
+    def resize(self,rect=None):
+        super().resize(rect)
+        self.calculate_width_in_characters()
+
+    def calculate_width_in_characters(self):
+        test_string="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        pix_width=self.font.size(test_string)[0]
+        self.width_in_characters=self.rect[2]*len(test_string)//pix_width
+        if self.width_in_characters<1:
+            self.width_in_characters=1
+        self.a_redraw_is_needed()
+        #print("width in characters ",self.width_in_characters)

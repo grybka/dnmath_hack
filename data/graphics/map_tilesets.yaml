@@ -1,5 +1,5 @@
 outdoor:
-  dirt: 
+  OUTDOOR_GRASS: 
     - [ "blank"   , 16 ]
     - [ "ground_1", 1 ]
     - [ "ground_1v", 1 ]
@@ -7,17 +7,7 @@ outdoor:
     - [ "ground_2", 1 ]
     - [ "ground_3", 1 ]
     - [ "ground_4", 1 ]
-  stone:
-    - [ "blank",    1 ]
-  impassible:
-    - [ "mountains_1",    1 ]
-    - [ "mountains_2",    1 ]
-    - [ "mountains_3",    1 ]
-  water:
-    - [ "water_1",    1 ]
-    - [ "water_2",    1 ]
-dungeon:
-  dirt:
+  INDOOR_FLOOR:
     - [ "blank"   , 10 ]
     - [ "dungeon_floor_1", 1 ]
     - [ "dungeon_floor_1v", 1 ]
@@ -25,13 +15,49 @@ dungeon:
     - [ "dungeon_floor_2", 1 ]
     - [ "dungeon_floor_2v", 1 ]
     - [ "dungeon_floor_2h", 1 ]
-  stone:
-    - [ "hash_1"   , 1 ]
-    - [ "hash_2"   , 1 ]
-    - [ "hash_3"   , 1 ]
-    - [ "hash_4"   , 1 ]
-  impassible:
-    - [ "blank"   , 1 ]
-  water:
+  INDOOR_CLEAN_FLOOR:
+    - [ "blank"   , 10 ]
+  STONE:
+    - [ "blank",    1 ]
+  IMPASSIBLE:
+    - [ "mountains_1",    1 ]
+    - [ "mountains_2",    1 ]
+    - [ "mountains_3",    1 ]
+  WATER:
     - [ "water_1",    1 ]
     - [ "water_2",    1 ]
+  EXIT:
+    - [ "blank", 1]
+dungeon:
+  OUTDOOR_GRASS: 
+    - [ "blank"   , 16 ]
+    - [ "ground_1", 1 ]
+    - [ "ground_1v", 1 ]
+    - [ "ground_1h", 1 ]
+    - [ "ground_2", 1 ]
+    - [ "ground_3", 1 ]
+    - [ "ground_4", 1 ]
+  INDOOR_FLOOR:
+    - [ "blank"   , 10 ]
+    - [ "dungeon_floor_1", 1 ]
+    - [ "dungeon_floor_1v", 1 ]
+    - [ "dungeon_floor_1h", 1 ]
+    - [ "dungeon_floor_2", 1 ]
+    - [ "dungeon_floor_2v", 1 ]
+    - [ "dungeon_floor_2h", 1 ]
+  INDOOR_CLEAN_FLOOR:
+    - [ "blank"   , 10 ]
+  STONE:
+    - [ "hash_1",    1 ]
+    - [ "hash_2",    1 ]
+    - [ "hash_3",    1 ]
+    - [ "hash_4",    1 ]
+  IMPASSIBLE:
+    - [ "mountains_1",    1 ]
+    - [ "mountains_2",    1 ]
+    - [ "mountains_3",    1 ]
+  WATER:
+    - [ "water_1",    1 ]
+    - [ "water_2",    1 ]
+  EXIT:
+    - [ "blank", 1]

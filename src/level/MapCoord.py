@@ -47,6 +47,8 @@ class MapCoord:
         return MapCoord(self.y,-self.x)
     def rotated_180(self):
         return MapCoord(-self.x,-self.y)
+    def get_neighbors(self):
+        return [self+MapCoord(0,-1),self+MapCoord(1,0),self+MapCoord(0,1),self+MapCoord(-1,0)]
     @staticmethod
     def all_directions():
         return [Direction.N,Direction.E,Direction.S,Direction.W]

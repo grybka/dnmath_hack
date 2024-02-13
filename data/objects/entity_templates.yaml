@@ -3,17 +3,23 @@ player:
   sprite_name: player
   reference: player
   default_weapon: player_fists
+  vision: 10
+  dark_vision: 2
+  max_hp: 10
+  passable_cells: [OUTDOOR_GRASS,INDOOR_FLOOR,INDOOR_CLEAN_FLOOR,EXIT]
 skeleton:
   type: Entity
   sprite_name: skeleton
   reference: skeleton
   matching_words: [skeleton]
   default_weapon: skeleton_claws
-  passable_cells: [dirt]
+  passable_cells: [OUTDOOR_GRASS,INDOOR_FLOOR,INDOOR_CLEAN_FLOOR]
+  max_hp: 2
 imp:
   type: Entity
   sprite_name: goblin
   reference: imp
   matching_words: [imp]
-  default_weapon: skeleton_claws
-  passable_cells: [dirt]
+  default_weapon: imp_blast
+  passable_cells: [OUTDOOR_GRASS,INDOOR_FLOOR,INDOOR_CLEAN_FLOOR]
+  max_hp: 2

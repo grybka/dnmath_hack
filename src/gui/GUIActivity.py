@@ -7,6 +7,9 @@ class GUIActivity:
     def update(self,clock_time):
         ...
 
+    def start(self):
+        ...
+
     def handle_event(self,event):
         return False #return true if event is handled and should not be passed to other elements
 
@@ -15,6 +18,9 @@ class GUIWaitForMapAnimation(GUIActivity):
     def __init__(self,mainwindow,engine,animation):
         super().__init__(mainwindow,engine)
         self.animation=animation
+
+    def start(self):
+        self.mainwindow.mapview.add_animation(self.animation)
 
     def update(self,clock_time):
         if self.animation.is_done():

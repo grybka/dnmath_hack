@@ -12,8 +12,9 @@ class GUIPane(GUIElement):
         self.anchors=anchors
         super().__init__(my_style,rect=rect)
         self.content_rect=rect
-        if element:
-            element.set_container(self)
+        self.set_element(element)
+#        if element:
+#            element.set_container(self)
 
     def handle_event(self,event,window_offset=(0,0)):
         if self.element:

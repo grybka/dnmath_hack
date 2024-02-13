@@ -19,12 +19,13 @@ class Entity(GameObject):
             self.equipment[slot]=None
         self.default_weapon_type=object.get("default_weapon",None)
         #vision
-        self.vision=object.get("vision",5) #in squares, illuminated >128
-        self.dark_vision=object.get("dark_vision",5) #in squares, illuminated <128
+        self.vision=object.get("vision",6) #in squares, illuminated >128
+        self.dark_vision=object.get("dark_vision",2) #in squares, illuminated <128
 
         #mobility
-        passable_cell_string=object.get("passable_cells",["dirt"])
+        passable_cell_string=object.get("passable_cells",["outdoor_grass","indoor_floor","indoor_clean_floor"])
         self.passable_cells=[string_to_celltype(x) for x in passable_cell_string]
+        #print("passable cells",self.passable_cells)
         #overrides
         self.is_takable=False
 
@@ -39,6 +40,8 @@ class Entity(GameObject):
     def get_missile_weapon(self):
         if self.equipment["missile"] is not None:
             return self.equipment["missile"]
+        if self.default_weapon_type is not None:
+            return create_object_from_template(self.default_weapon_type)
         return None
 
     def get_equipped_item(self,slot):
@@ -72,17 +75,34 @@ class Entity(GameObject):
         self.equipment[slot]=None
         return True
     
-    def get_visible_cells(self,map,include_nearby=False): #returns a list of visible cells
+    def get_visible_cells(self,map): #returns a list of visible cells
         possibly_visible,nearby=map.get_visible_cells(self.get_pos(),self.vision)
         visible=[]
         for cell in possibly_visible:
             if map.get_cell(cell).light_level>128:
                 visible.append(cell)
             elif self.get_pos().manhattan_distance(cell)<self.dark_vision:
+                #print("visible but dark")
                 visible.append(cell)
         #TODO adjust nearby to remove cells that are not visible
-        if include_nearby:
-            return visible,nearby
         return visible
+    
+    #for lighting
+    def get_lighting_params(self):
+        max_radius=self.light_radius
+        max_intensity=self.light_intensity
+        for item in self.equipment.values():
+            if item is not None:
+                radius,intensity=item.get_lighting_params()
+                if radius>max_radius:
+                    max_radius=radius
+                if intensity>max_intensity:
+                    max_intensity=intensity
+        #if self.game_engine is None:
+        #    print("object {} has no ref to game enine".format(self.reference_noun()))
+        #if self.id==self.game_engine.get_player_id():
+        #if self.noun=="player":
+        #    print("returning light params",max_radius,max_intensity)
+        return max_radius,max_intensity
         
 register_gameobject_constructor("Entity",Entity)

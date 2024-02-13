@@ -3,10 +3,11 @@ import yaml
 from ..gui_core.GUIElement import GUIElement, point_in_rect
 from .GUISprites import get_sprite_store,HashedSpriteArray
 from ..level.MapCoord import MapCoord
-from ..level.GraphPaperMap import string_to_celltype,WallType,MapMask,CellVisibility
+from ..level.GraphPaperMap import string_to_celltype,WallType,MapMask,CellVisibility,CellType
 from .Animations import MapAnimationMoveObject
-from .GUIEvents import CELL_SELECTED_EVENT
+from .GUIEvents import *
 from .beziercurve import hand_sketch_line
+from ..level.Entity import Entity
 
 #layers:
 #background
@@ -32,9 +33,18 @@ class MVLayer:
 class MVCellLayer(MVLayer):
     def __init__(self,engine,mapview):
         super().__init__(engine,mapview)
-
         self.rendered_surf=None
         self.cell_sprites={}
+        #self.cell_colors={}
+        #self.cell_colors[CellType.OUTDOOR_GRASS]=(200,255,200)
+        #self.cell_colors[CellType.IMPASSIBLE]=(200,200,200)
+        #self.cell_colors[CellType.EXIT]=(200,255,200)
+        #self.cell_colors[CellType.INDOOR_FLOOR]=(181,101,29)
+        #self.cell_colors[CellType.INDOOR_CLEAN_FLOOR]=(181,101,29)
+
+        #invert cell colors
+        #for cell_type in self.cell_colors:
+        #    self.cell_colors[cell_type]=(255-self.cell_colors[cell_type][0],255-self.cell_colors[cell_type][1],255-self.cell_colors[cell_type][2])
 
     def render(self,offset): #rebuild internal surface
         pixels_per_grid=self.mapview.pixels_per_grid
@@ -48,6 +58,8 @@ class MVCellLayer(MVLayer):
                     sprite_name=self.cell_sprites[cell.cell_type].choose_sprite(cell.random_number)
                     sprite=get_sprite_store().get_sprite_scaled(sprite_name,(pixels_per_grid,pixels_per_grid))
                     self.rendered_surf.blit(sprite,(x*pixels_per_grid,y*pixels_per_grid))
+                    #if cell.cell_type in self.cell_colors:
+                    #    self.rendered_surf.fill(self.cell_colors[cell.cell_type],(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid),pygame.BLEND_RGB_SUB)
                 else:
                     #draw a red square for missing sprite
                     self.rendered_surf.fill((255,0,0),(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
@@ -59,14 +71,76 @@ class MVCellLayer(MVLayer):
             pygame.draw.line(self.rendered_surf,graph_line_color,(0,y*pixels_per_grid),(self.engine.level.map.width*pixels_per_grid,y*pixels_per_grid))
 
     def draw(self,surf,map_offset): #map offset is the offset of the map in pixels
-        if self.needs_rerender:
+        if self.needs_rerender or self.rendered_surf is None:
             self.render(map_offset)
             self.needs_rerender=False
         surf.blit(self.rendered_surf,(-map_offset[0],-map_offset[1]))
 
     def new_map(self):
         self.needs_rerender=True
+        self.rendered_surf=None
         self.cell_sprites=self.mapview.tilesets[self.engine.level.tileset_name]
+
+#cells in view with good lighting get color
+class MVCellColorLayer(MVLayer):
+    def __init__(self,engine,mapview):
+        super().__init__(engine,mapview)
+        self.cell_colors={}
+        self.colorsets={}
+        self.load_cell_colors()
+        self.rendered_surf=None
+
+    def load_cell_colors(self,fname="data/graphics/map_colorsets.yaml"):
+        with open(fname,"r") as f:
+            self.colorsets=yaml.safe_load(f)
+
+    def draw(self,surf,map_offset):
+        if self.needs_rerender or self.rendered_surf is None:
+            self.render()
+            self.needs_rerender=False
+        surf.blit(self.rendered_surf,(-map_offset[0],-map_offset[1]))
+
+    def new_map(self):
+        self.rendered_surf=None
+        self.needs_rerender=True
+        if self.engine.level.tileset_name in self.colorsets:
+            print("loading colorset for {}".format(self.engine.level.tileset_name))
+            for key in self.colorsets[self.engine.level.tileset_name]:
+                color=self.colorsets[self.engine.level.tileset_name][key]
+                self.cell_colors[string_to_celltype(key)]=( color[0],color[1],color[2],150)
+                #self.cell_colors[string_to_celltype(key)]=( 255-color[0],255-color[1],255-color[2])
+    
+    def render(self):
+        #print("rendering visibility")
+        pixels_per_grid=self.mapview.pixels_per_grid
+        if self.rendered_surf==None:
+            self.rendered_surf=pygame.Surface((self.engine.level.map.width*pixels_per_grid,self.engine.level.map.height*pixels_per_grid),pygame.SRCALPHA)
+        visibility=self.engine.level.memory_mask
+        #this is probably not the best place to do it, but
+        #I have to recalculate the player's visibility sometime
+        map=self.engine.level.map
+        #self.engine.level.map.update_map_mask(visibility,self.engine.get_player().get_pos(),distance=5)
+        lowest_level=180
+        def light_level_to_color(light_level):
+            return (0,0,0,max(min(255-light_level,lowest_level),0))
+        remembered_shading=(0,0,0,lowest_level)
+        hidden_shading=(0,0,0,255)
+        for x in range(self.engine.level.map.width):
+            for y in range(self.engine.level.map.height):
+                if visibility.cells[x][y]==CellVisibility.VISIBLE:
+                    shading=light_level_to_color(map.get_cell(MapCoord(x,y)).light_level)
+                    #print("shading is ",shading)
+                    if map.get_cell(MapCoord(x,y)).cell_type in self.cell_colors:
+                        shading=self.cell_colors[map.get_cell(MapCoord(x,y)).cell_type]
+                        self.rendered_surf.fill(shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
+                        #self.rendered_surf.fill(shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid),pygame.BLEND_RGB_SUB)
+                    self.rendered_surf.fill(shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
+                elif visibility.cells[x][y]==CellVisibility.REMEMBERED:
+                    self.rendered_surf.fill(remembered_shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
+                else:
+                    self.rendered_surf.fill(hidden_shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
+    
+
 
 class MVWallLayer(MVLayer):
     def __init__(self,engine,mapview):
@@ -78,19 +152,51 @@ class MVWallLayer(MVLayer):
         pixels_per_grid=self.mapview.pixels_per_grid
         if self.rendered_surf==None:
             self.rendered_surf=pygame.Surface((self.engine.level.map.width*pixels_per_grid,self.engine.level.map.height*pixels_per_grid),pygame.SRCALPHA)
+        print("rerendireing walls")
         self.rendered_surf.fill((0,0,0,0))
         for x in range(self.engine.level.map.width):
             for y in range(self.engine.level.map.height):
                 cell=self.engine.level.map.get_cell(MapCoord(x,y))
-                self.render_wall(cell.walls[0].wall_type,(x*pixels_per_grid,y*pixels_per_grid),((x+1)*pixels_per_grid,y*pixels_per_grid))
-                self.render_wall(cell.walls[1].wall_type,((x+1)*pixels_per_grid,y*pixels_per_grid),((x+1)*pixels_per_grid,(y+1)*pixels_per_grid))
-                self.render_wall(cell.walls[2].wall_type,((x+1)*pixels_per_grid,(y+1)*pixels_per_grid),(x*pixels_per_grid,(y+1)*pixels_per_grid))
-                self.render_wall(cell.walls[3].wall_type,(x*pixels_per_grid,(y+1)*pixels_per_grid),(x*pixels_per_grid,y*pixels_per_grid))
+                self.render_wall(cell.walls[0].wall_type,(x*pixels_per_grid,y*pixels_per_grid),((x+1)*pixels_per_grid,y*pixels_per_grid),cell.walls[0].random_number)
+                self.render_wall(cell.walls[1].wall_type,((x+1)*pixels_per_grid,y*pixels_per_grid),((x+1)*pixels_per_grid,(y+1)*pixels_per_grid),cell.walls[1].random_number)
+                self.render_wall(cell.walls[2].wall_type,((x+1)*pixels_per_grid,(y+1)*pixels_per_grid),(x*pixels_per_grid,(y+1)*pixels_per_grid),cell.walls[2].random_number)
+                self.render_wall(cell.walls[3].wall_type,(x*pixels_per_grid,(y+1)*pixels_per_grid),(x*pixels_per_grid,y*pixels_per_grid),cell.walls[3].random_number)
 
-    def render_wall(self,wall_type,from_pixel,to_pixel):
+    def render_wall(self,wall_type,from_pixel,to_pixel,random_seed=None):
+        door_wall_fraction=0.1 #fraction of length
+        door_thickness=0.1 #fraction of length
         if wall_type==WallType.WALL:
             #pygame.draw.line(self.rendered_surf,(0,0,0,255),from_pixel,to_pixel,5)
-            hand_sketch_line(self.rendered_surf,from_pixel,to_pixel,(0,0,0,255),5)
+            hand_sketch_line(self.rendered_surf,from_pixel,to_pixel,(0,0,0,255),5,random_seed=random_seed)
+        elif wall_type==WallType.DOOR_CLOSED:
+            thick_px=int(door_thickness*self.mapview.pixels_per_grid)
+            pt1=from_pixel
+            pt2=( int(from_pixel[0]+door_wall_fraction*(to_pixel[0]-from_pixel[0])),int(from_pixel[1]+door_wall_fraction*(to_pixel[1]-from_pixel[1])))
+            pt3=( int(to_pixel[0]-door_wall_fraction*(to_pixel[0]-from_pixel[0])),int(to_pixel[1]-door_wall_fraction*(to_pixel[1]-from_pixel[1])))
+            pt4=to_pixel
+            pygame.draw.line(self.rendered_surf,(0,0,0,255),pt1,pt2,5)
+            pygame.draw.line(self.rendered_surf,(0,0,0,255),pt3,pt4,5)
+            if pt1[0]==pt2[0]:
+                pygame.draw.rect(self.rendered_surf,(255,255,255,255),(pt2[0]-thick_px,pt2[1],2*thick_px,pt3[1]-pt2[1]))    
+                pygame.draw.rect(self.rendered_surf,(0,0,0,255),(pt2[0]-thick_px,pt2[1],2*thick_px,pt3[1]-pt2[1]),3)    
+            else:
+                pygame.draw.rect(self.rendered_surf,(255,255,255,255),(pt2[0],pt2[1]-thick_px,pt3[0]-pt2[0],2*thick_px))
+                pygame.draw.rect(self.rendered_surf,(0,0,0,255),(pt2[0],pt2[1]-thick_px,pt3[0]-pt2[0],2*thick_px),3)
+        elif wall_type==WallType.DOOR_OPEN:
+            thick_px=int(door_thickness*self.mapview.pixels_per_grid)
+            pt1=from_pixel
+            pt2=( int(from_pixel[0]+door_wall_fraction*(to_pixel[0]-from_pixel[0])),int(from_pixel[1]+door_wall_fraction*(to_pixel[1]-from_pixel[1])))
+            pt3=( int(to_pixel[0]-door_wall_fraction*(to_pixel[0]-from_pixel[0])),int(to_pixel[1]-door_wall_fraction*(to_pixel[1]-from_pixel[1])))
+            pt4=to_pixel
+            pygame.draw.line(self.rendered_surf,(0,0,0,255),pt1,pt2,5)
+            pygame.draw.line(self.rendered_surf,(0,0,0,255),pt3,pt4,5)
+            if pt1[0]==pt2[0]:
+                #pygame.draw.rect(self.rendered_surf,(255,255,255,255),(pt2[0]-thick_px,pt2[1],2*thick_px,pt3[1]-pt2[1]))    
+                pygame.draw.rect(self.rendered_surf,(0,0,0,255),(pt2[0]-thick_px,pt2[1],2*thick_px,thick_px),3)    
+            else:
+                #pygame.draw.rect(self.rendered_surf,(255,255,255,255),(pt2[0],pt2[1]-thick_px,pt3[0]-pt2[0],2*thick_px))
+                pygame.draw.rect(self.rendered_surf,(0,0,0,255),(pt2[0],pt2[1]-thick_px,thick_px,2*thick_px),3)
+            ...
 
     def draw(self,surf,map_offset):
         if self.needs_rerender:
@@ -100,6 +206,7 @@ class MVWallLayer(MVLayer):
 
     def new_map(self):
         self.needs_rerender=True
+        self.rendered_surf=None
 
 class MVObjectLayer(MVLayer):
     def __init__(self,engine,mapview):
@@ -111,17 +218,43 @@ class MVObjectLayer(MVLayer):
         #I don't think it will help to pre-render
         min_x,min_y,max_x,max_y=self.mapview.get_tiles_in_view()
         sprite_size=(self.mapview.pixels_per_grid,self.mapview.pixels_per_grid)
+        visibility=self.engine.level.memory_mask
         #print("drawing objects in view",min_x,min_y,max_x,max_y)
         for i in range(min_x,max_x):
             for j in range(min_y,max_y):
                 cell=MapCoord(i,j)
                 #TODO figure out draw order 
-                for obj in self.engine.level.map.get_objects_in_cell(cell):
-                    if obj.id in self.hidden_object_ids:
-                        continue
-                    #print("drawing object at {}",obj.sprite_name,cell)
-                    sprite=get_sprite_store().get_sprite_scaled(obj.sprite_name,sprite_size)
-                    surf.blit(sprite,(i*self.mapview.pixels_per_grid-map_offset[0],j*self.mapview.pixels_per_grid-map_offset[1]))
+                if visibility.cells[i][j]==CellVisibility.VISIBLE:
+                    for obj in self.engine.level.map.get_objects_in_cell(cell):
+                        if obj.id in self.hidden_object_ids:
+                            continue
+                        if obj.get_sprite_name() is None:
+                            continue
+                        #print("drawing object at {}",obj.sprite_name,cell)
+                        sprite=get_sprite_store().get_sprite_scaled(obj.get_sprite_name(),sprite_size)
+                        surf.blit(sprite,(i*self.mapview.pixels_per_grid-map_offset[0],j*self.mapview.pixels_per_grid-map_offset[1]))
+                        if isinstance(obj,Entity):
+                            if obj.hp<obj.max_hp:
+                                self.draw_health_bar(surf,(i*self.mapview.pixels_per_grid-map_offset[0],j*self.mapview.pixels_per_grid-map_offset[1]),self.mapview.pixels_per_grid,obj.hp,obj.max_hp)
+
+
+    def draw_health_bar(self,surf,sprite_pos,ppg,health,max_health):
+        #draw health bar
+        health_bar_height=5
+        health_bar_border=1
+        #10 percent down from top
+        #80 percent wide
+        health_bar_x=int(sprite_pos[0]+0.1*ppg)
+        health_bar_y=int(sprite_pos[1]+0.1*ppg)
+        health_bar_width=int(ppg*0.8)
+
+        health_bar_color_border=(100,100,100)
+        health_bar_color=(0,255,0)
+        health_bar_bg_color=(0,0,0)
+        health_bar_length=health_bar_width*health/max_health
+        pygame.draw.rect(surf,health_bar_color_border,(health_bar_x-health_bar_border,health_bar_y-health_bar_border,health_bar_width+2*health_bar_border,health_bar_height+2*health_bar_border))
+        pygame.draw.rect(surf,health_bar_bg_color,(health_bar_x,health_bar_y,health_bar_width,health_bar_height))
+        pygame.draw.rect(surf,health_bar_color,(health_bar_x,health_bar_y,health_bar_length,health_bar_height))
 
     def hide_object(self,object_id):
         self.hidden_object_ids.append(object_id)
@@ -130,7 +263,7 @@ class MVObjectLayer(MVLayer):
         self.hidden_object_ids=[obj_id for obj_id in self.hidden_object_ids if obj_id!=object_id]
 
     def new_map(self):
-        ...
+        self.needs_redraw=True
 
 class MVVisibilityLayer(MVLayer):
     def __init__(self,engine,mapview):
@@ -139,13 +272,29 @@ class MVVisibilityLayer(MVLayer):
         self.rendered_surf=None
         self.needs_rerender=True
 
+        self.cell_colors={}
+        self.colorsets={}
+        self.load_cell_colors()
+
+    def load_cell_colors(self,fname="data/graphics/map_colorsets.yaml"):
+        with open(fname,"r") as f:
+            self.colorsets=yaml.safe_load(f)
 
     def draw(self,surf,map_offset):
-        if self.needs_rerender:
+        if self.needs_rerender or self.rendered_surf is None:
             self.render()
             self.needs_rerender=False
         surf.blit(self.rendered_surf,(-map_offset[0],-map_offset[1]))
 
+    def new_map(self):
+        self.rendered_surf=None
+        self.needs_rerender=True
+        if self.engine.level.tileset_name in self.colorsets:
+            print("loading colorset for {}".format(self.engine.level.tileset_name))
+            for key in self.colorsets[self.engine.level.tileset_name]:
+                color=self.colorsets[self.engine.level.tileset_name][key]
+                self.cell_colors[string_to_celltype(key)]=( color[0],color[1],color[2],150)
+                #self.cell_colors[string_to_celltype(key)]=( 255-color[0],255-color[1],255-color[2])
         
     def render(self):
         #print("rendering visibility")
@@ -155,17 +304,27 @@ class MVVisibilityLayer(MVLayer):
         visibility=self.engine.level.memory_mask
         #this is probably not the best place to do it, but
         #I have to recalculate the player's visibility sometime
-#        visibility=self.visibility
-#        visibility.visible_to_remembered()
-        self.engine.level.map.update_map_mask(visibility,self.engine.get_player().get_pos(),distance=5)
+        map=self.engine.level.map
+        #self.engine.level.map.update_map_mask(visibility,self.engine.get_player().get_pos(),distance=5)
+        lowest_level=180
+        def light_level_to_color(light_level):
+            return (0,0,0,max(min(255-light_level,lowest_level),0))
+        remembered_shading=(0,0,0,lowest_level)
+        hidden_shading=(0,0,0,255)
         for x in range(self.engine.level.map.width):
             for y in range(self.engine.level.map.height):
                 if visibility.cells[x][y]==CellVisibility.VISIBLE:
-                    self.rendered_surf.fill((0,0,0,0),(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
+                    shading=light_level_to_color(map.get_cell(MapCoord(x,y)).light_level)
+                    #print("shading is ",shading)
+                    if map.get_cell(MapCoord(x,y)).cell_type in self.cell_colors:
+                        shading=self.cell_colors[map.get_cell(MapCoord(x,y)).cell_type]
+                        self.rendered_surf.fill(shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
+                        #self.rendered_surf.fill(shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid),pygame.BLEND_RGB_SUB)
+                    self.rendered_surf.fill(shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
                 elif visibility.cells[x][y]==CellVisibility.REMEMBERED:
-                    self.rendered_surf.fill((0,0,0,128),(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
+                    self.rendered_surf.fill(remembered_shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
                 else:
-                    self.rendered_surf.fill((0,0,0,255),(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
+                    self.rendered_surf.fill(hidden_shading,(x*pixels_per_grid,y*pixels_per_grid,pixels_per_grid,pixels_per_grid))
     
 
 class MVAnimationLayer(MVLayer):
@@ -214,19 +373,23 @@ class GUIMapView(GUIElement):
         #tracking
         self.elasticity=0.05
         self.maxvel=7
-        self.pixel_slop=100
+        self.tracking_slop_grids_x=2
+        self.tracking_slop_grids_y=1
+        self.turbo_tracking=False
         #tilesets
         self.tilesets={}
         self.load_tilesets("data/graphics/map_tilesets.yaml")
         self.layers=[]
         self.cell_layer=MVCellLayer(engine,self)
         self.layers.append(self.cell_layer)
+        self.cell_color_layer=MVCellColorLayer(engine,self)
+        self.layers.append(self.cell_color_layer)
         self.wall_layer=MVWallLayer(engine,self)
         self.layers.append(self.wall_layer)
+        self.visibility_layer=MVVisibilityLayer(engine,self)
+        #self.layers.append(self.visibility_layer)
         self.object_layer=MVObjectLayer(engine,self)
         self.layers.append(self.object_layer)
-        self.visibility_layer=MVVisibilityLayer(engine,self)
-        self.layers.append(self.visibility_layer)
         self.animation_layer=MVAnimationLayer(engine,self)
         self.layers.append(self.animation_layer)
         self.selection_layer=MVSelectionLayer(engine,self)
@@ -242,6 +405,12 @@ class GUIMapView(GUIElement):
                     self.selection_layer.set_selected_cell(cell)
                     pygame.event.post(pygame.event.Event(CELL_SELECTED_EVENT,{"cell": cell}))
                     return True
+                elif event.button==3:
+                    cell=self.pixel_to_cell((event.pos[0]-window_offset[0],event.pos[1]-window_offset[1]))
+                    pygame.event.post(pygame.event.Event(CELL_RIGHTCLICKED_EVENT,{"cell": cell}))
+                    return True
+                else:
+                    print("button was not 1, it was {}".format(event.button))
         return False
 
     def update(self,clock_time):
@@ -301,13 +470,17 @@ class GUIMapView(GUIElement):
         #TODO match target center
         dx=target_x-self.map_offset[0]
         dy=target_y-self.map_offset[1]
-        if abs(dx)<self.pixel_slop:
+        if abs(dx)<self.tracking_slop_grids_x*self.pixels_per_grid:
             dx=0
-        if abs(dy)<self.pixel_slop:
+        if abs(dy)<self.tracking_slop_grids_y*self.pixels_per_grid:
             dy=0
+        if dx==0 and dy==0:
+            self.turbo_tracking=False
         vx=self.elasticity*dx
         vy=self.elasticity*dy
         maxvel=self.maxvel
+        if self.turbo_tracking:
+            maxvel=10*maxvel
         if vx>maxvel:
             vx=maxvel
         if vx<-maxvel:
@@ -328,6 +501,9 @@ class GUIMapView(GUIElement):
     def pixel_to_cell(self,pos):
         return MapCoord( (pos[0]+self.map_offset[0])//self.pixels_per_grid,(pos[1]+self.map_offset[1])//self.pixels_per_grid)
     
+    def cell_to_pixel(self,cell):
+        return ( (cell.x)*self.pixels_per_grid-self.map_offset[0],(cell.y)*self.pixels_per_grid-self.map_offset[1])
+
     def add_animation(self,animation):
         self.animation_layer.animations.append(animation)
         animation.start()
@@ -344,10 +520,23 @@ class GUIMapView(GUIElement):
         return self.selection_layer.selected_cell
     
     def handle_engine_message(self,message):
+        if message.message_type=="LevelChanged":
+            print("level changed message received")
+            self.new_map()
+            self.selection_layer.set_selected_cell(None)
+            pygame.event.post(pygame.event.Event(CELL_SELECTED_EVENT,{"cell": None}))
+            self.turbo_tracking=True
         if message.message_type=="MapChanged":
             print("map changed message received")
             self.redraw_needed=True
             self.selection_layer.set_selected_cell(None)
             pygame.event.post(pygame.event.Event(CELL_SELECTED_EVENT,{"cell": None}))
         if message.message_type=="ObjectMoved":
+            #lighting may have changed
+            self.visibility_layer.suggest_rerender()
+            self.cell_color_layer.suggest_rerender()
+            self.cell_color_layer.suggest_rerender()
+        if message.message_type=="DoorChanged":
+            self.wall_layer.suggest_rerender()
+            self.cell_color_layer.suggest_rerender()
             self.visibility_layer.suggest_rerender()

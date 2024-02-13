@@ -34,3 +34,18 @@ class BehaviorTreeSequence(BehaviorTree):
             return BehaviorTreeStatus.RUNNING
         else:
             return BehaviorTreeStatus.FAILURE
+
+#execute the first child that returns success
+class BehaviorTreeSelector(BehaviorTree):
+    def __init__(self,children,parent=None):
+        super().__init__(parent)
+        self.children=children #list of behavior trees
+        
+    def act(self,agent,engine):
+        for child in self.children:
+            child_status=child.act(agent,engine)
+            if child_status==BehaviorTreeStatus.SUCCESS:
+                return BehaviorTreeStatus.SUCCESS
+            elif child_status==BehaviorTreeStatus.RUNNING:
+                return BehaviorTreeStatus.RUNNING
+        return BehaviorTreeStatus.FAILURE

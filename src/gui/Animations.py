@@ -20,6 +20,29 @@ class MapAnimation:
     def start(self):
         ...
 
+class MapAnimationMultiple(MapAnimation):
+    def __init__(self,mapview,engine,animations):
+        super().__init__(mapview,engine)
+        self.animations=animations
+
+    def start(self):
+        for animation in self.animations:
+            animation.start()
+
+    def is_done(self):
+        for animation in self.animations:
+            if not animation.is_done():
+                return False
+        return True
+    
+    def update(self,clock_time):
+        for animation in self.animations:
+            animation.update(clock_time)
+
+    def draw(self,surf,map_offset):
+        for animation in self.animations:
+            animation.draw(surf,map_offset)
+
 class MapAnimationMoveObject(MapAnimation):
     def __init__(self,mapview,engine,object_id,start_pos,end_pos,duration):
         super().__init__(mapview,engine)
@@ -125,6 +148,7 @@ class MapAnimationMissile(MapAnimation):
         self.on_time+=clock_time
         #print("animation time",self.on_time,self.duration)
         if self.on_time>self.duration:
+            #print("missile done")
             #self.mapview.object_layer.unhide_object(self.object_id)
             self.done=True
 
@@ -169,6 +193,7 @@ class MapAnimationFlash(MapAnimation):
         #print("animation time",self.on_time,self.duration)
         if self.on_time>sum(self.durations):
             #self.mapview.object_layer.unhide_object(self.object_id)
+            #print("flash done")
             self.done=True
 
     def draw(self,surf,map_offset):
@@ -187,3 +212,52 @@ class MapAnimationFlash(MapAnimation):
 
         #surf.fill((0,alphaint,alphaint),(self.cell[0]*ppg-map_offset[0],self.cell[1]*ppg-self.cell[1],ppg,ppg),pygame.BLEND_SUB)
         #surf.fill((alphaint,0,0),(self.cell[0]*ppg-map_offset[0],self.cell[1]*ppg-self.cell[1],ppg,ppg),pygame.BLEND_MAX)
+
+class MapAnimationNudgeObject(MapAnimation):
+    def __init__(self,mapview,engine,object_id,start_pos,towards_pos,duration,fraction=0.25):
+        super().__init__(mapview,engine)
+        self.object_id=object_id
+        self.start_pos=start_pos
+        self.end_pos=towards_pos
+        self.fraction=fraction #fraction of way before turnaround
+        self.duration=duration
+        self.on_time=0
+        self.done=False
+
+    def start(self):
+        self.on_time=0
+        self.mapview.object_layer.hide_object(self.object_id)
+    
+    def is_done(self):
+        return self.done
+    
+    def update(self,clock_time):
+        self.on_time+=clock_time
+        #print("animation time",self.on_time,self.duration)
+        if self.on_time>self.duration:
+            self.mapview.object_layer.unhide_object(self.object_id)
+            self.done=True
+
+    def draw(self,surf,map_offset):
+        object=self.engine.level.object_store.get_object(self.object_id)
+        if object is None:
+            self.done=True
+            self.mapview.object_layer.unhide_object(self.object_id)
+            return
+        if self.on_time>self.duration:
+            self.done=True
+            self.mapview.object_layer.unhide_object(self.object_id)
+            return
+        ppg=self.mapview.pixels_per_grid
+        sprite_size=(self.mapview.pixels_per_grid,self.mapview.pixels_per_grid)
+        if self.on_time<self.duration/2:
+            x=self.start_pos.x+self.fraction*(self.end_pos.x-self.start_pos.x)*self.on_time*2/self.duration
+            y=self.start_pos.y+self.fraction*(self.end_pos.y-self.start_pos.y)*self.on_time*2/self.duration
+        else:
+            x=self.start_pos.x+self.fraction*(self.end_pos.x-self.start_pos.x)*(1-self.on_time*2/self.duration)
+            y=self.start_pos.y+self.fraction*(self.end_pos.y-self.start_pos.y)*(1-self.on_time*2/self.duration)
+        #print("animation draw",x,y)
+        #print("start",self.start_pos)
+        #print("stop",self.end_pos)
+        sprite=get_sprite_store().get_sprite_scaled(object.sprite_name,sprite_size)
+        surf.blit(sprite,(x*ppg-map_offset[0],y*ppg-map_offset[1]))

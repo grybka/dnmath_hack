@@ -6,6 +6,7 @@ from ..gui_core.GUITextBox import GUITextBox, GUILabel
 from ..gui_core.GUIButton import GUITextButtonCol
 from .GUIItemPopup import GUIItemPopup
 from . import GUIEvents
+from ..actions.EntityAction import *
 
 #Information to be displayed in the status pane
 #Your health
@@ -31,32 +32,36 @@ class GUIStatusPane(GUIColLayout):
         inventory_panel=GUIColLayout([inventory_label,self.inventory],(0,0,200,400),anchors=[GUIHAnchor.LEFT,GUIVAnchor.TOP])
 
 
-        self.item_rows=GUIRowLayout([equipment_panel,inventory_panel],(0,0,200,400),element_proportions=[1,1],anchors=[GUIHAnchor.RESIZE,GUIVAnchor.RESIZE])     
+        self.item_rows=GUIRowLayout([equipment_panel,inventory_panel],(0,0,200,400),element_proportions=[1,1],anchors=[GUIHAnchor.RESIZE,GUIVAnchor.RESIZE])
 
         self.update_status()
 
-   
+
         super().__init__([self.health_info,self.item_rows])
 
     def handle_event(self,event,window_offset=(0,0)):
         if event.type == GUIEvents.CELL_SELECTED_EVENT:
-            text="Cell selected:\n {}".format(event.cell)
-            for wall in self.engine.level.map.get_cell(event.cell).walls:
-                text+="\n{}".format(wall)
+            if event.cell is None:
+                text=""
+            else:
+                text="Cell selected:\n {}".format(event.cell)
+                for wall in self.engine.level.map.get_cell(event.cell).walls:
+                    text+="\n{}".format(wall)
         super().handle_event(event,window_offset)
 
     def handle_engine_message(self,message):
-        if message.message_type=="PlayerInventoryChanged":
-            print("player inventory changed")
+        update_messages=["PlayerInventoryChanged","PlayerEquippedChanged","MeleeAttack","RangedAttack"]
+        if message.message_type in update_messages:
             self.update_status()
 
     def update_status(self):
-        #self.health_info.set_text("Health: {}/{}".format(player.health,player.max_health))
+        player=self.engine.get_player()
+
+        self.health_info.set_text("Health: {}/{}".format(player.hp,player.max_hp))
         #self.inventory.set_text("Inventory:\n{}".format("\n".join([item.reference_noun(specific=False) for item in player.inventory])))
         #self.add_element(self.inventory)
         self.equipped_list.clear_contents()
         self.inventory.clear_contents()
-        player=self.engine.get_player()
 
         button_names=[]
         equipped_button_names=[]
@@ -88,13 +93,33 @@ class GUIStatusPane(GUIColLayout):
 
         self.a_redraw_is_needed()
 
-    def inventory_button_clicked(self,text):
+    def inventory_button_clicked(self,mouse_button,text):
         print("inventory button clicked {}".format(text))
-        self.mainwindow.add_popup_window(GUIItemPopup(self.engine,self.mainwindow,self.inventory_button_map[text]))
+        if mouse_button==1:
+            self.mainwindow.add_popup_window(GUIItemPopup(self.engine,self.mainwindow,self.inventory_button_map[text]))
+        elif mouse_button==3:
+            print("right clicked")
+            #if I can wear it, wear it
+            action=EquipAction(self.engine.get_player(),self.engine,self.inventory_button_map[text])
+            possibility=action.is_possible()
+            if possibility[0]:
+                self.engine.set_player_action(action)
+            else:
+                self.mainwindow.text_window.print(possibility[1])
+            #TODO if I can use it or drink it or eat it, use it
+        else:
+            print("unhandleded mouse button {}".format(mouse_button))
 
-    def equip_button_clicked(self,text):
+    def equip_button_clicked(self,mouse_button,text):
         print("equip button clicked {}".format(text))
         obj=self.equipment_button_map[text]
         if obj is not None:
-            self.mainwindow.add_popup_window(GUIItemPopup(self.engine,self.mainwindow,obj))
-        
+            if mouse_button==1:
+                self.mainwindow.add_popup_window(GUIItemPopup(self.engine,self.mainwindow,obj))
+            else:
+                action=UnequipAction(self.engine.get_player(),self.engine,obj)
+                possibility=action.is_possible()
+                if possibility[0]:
+                    self.engine.set_player_action(action)
+                else:
+                    self.mainwindow.text_message(possibility[1])
